@@ -28,5 +28,4 @@ t/Test-Proto-CodeRef.t
 t/Test-Proto-Compare.t
 t/Test-Proto-String.t
 
-META.yml                                 Module YAML meta-data (added by MakeMaker)
-META.json                                Module JSON meta-data (added by MakeMaker)
+META.yml                                 Module meta-data (added by MakeMaker)
