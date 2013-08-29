@@ -1,36 +1,41 @@
 package Test::Proto::Compare::Numeric;
-use 5.006;
 use strict;
 use warnings;
-use base 'Test::Proto::Compare';
+use Moo;
+extends 'Test::Proto::Compare';
 
-sub new
-{
-	my ($class) = @_;
-	my $code = sub {$_[0] <=> $_[1];};
-	bless {
-		'reverse'=>'0',
-		'code'=>$code,
-	}, $class;
+sub BUILDARGS {
+	my $class = shift;
+	return {
+		summary => '<=>',
+		code    => sub { $_[0] <=> $_[1] },
+		( exists( $_[0] ) ? ( code => $_[0] ) : () )
+	};
 }
-
-1;
-
-=pod
 
 =head1 NAME
 
-Test::Proto::Compare::Numeric - class for numeric comparison.
+Test::Proto::Compare::Numeric - numeric comparison
 
 =head1 SYNOPSIS
 
-	Test::Proto::Compare::Numeric->new->compare('11', '2'); # -1
+	my $c = Test::Proto::Compare::Numeric;
+	$c->compare($left, $right); # $left <=> $right
+	$c->reverse->compare($left, $right); # $right <=> $left
 
-This is a class for comparing numbers, derived from L<Test::Proto::Compare>. It has no additional methods; the new function does not take a coderef
+This class provides a wrapper for comparison functions so they can be identified by formatters. Except as described below, identical to L<Test::Proto::Compare>.
 
-=head1 OTHER INFORMATION
+=head1 METHODS
 
-For author, version, bug reports, support, etc, please see L<Test::Proto>. 
+=head3 code
+
+Chainable attribute containing the code, which by default is a numeric comparison.
+
+
+=head3 summary
+
+Chainable attribute; a brief human-readable description of the operation which will be performed. Default is '<=>'.
 
 =cut
 
+1;

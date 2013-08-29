@@ -2,59 +2,107 @@ package Test::Proto::CodeRef;
 use 5.006;
 use strict;
 use warnings;
-use base 'Test::Proto::Base';
-
-sub initialise
-{
-	my ($self) = @_;
-	$self->is_defined;
-	$self->is_a('CODE');
-}
-
-sub try_run
-{
-	my ($self, $args, $expected, $why) = @_;
-	$self->add_test(_try_run($args, $self->upgrade($expected)), $why);
-}
-
-sub _try_run
-{
-	my ($args, $expected) = @_;
-	return sub{
-		my $got = shift;
-		my $result;
-		eval { $result = $expected->validate(&{$got}(@$args)); };
-		return $result if defined $result;
-		return exception ($@) if $@;
-	}
-}
-
-return 1; # module loaded ok
-
-=pod
+use Moo;
+extends 'Test::Proto::Base';
+use Test::Proto::Common;
 
 =head1 NAME
 
-Test::Proto::CodeRef - Test Prototype for CodeRefs.
+Test::Proto::CodeRef - Test a coderef's behaviour
 
-=head1 SYNOPSIS
+=head3 call
 
-	Test::Proto::CodeRef->new->ok(sub{}); # ok
-	Test::Proto::CodeRef->new->ok(undef); # not ok
+	$p->call(['test.txt','>'], [$fh])->ok($subject);
 
-This is a test prototype which requires that the value it is given is defined and is a a CodeRef. In addition to methods inherited from L<Test::Proto::Base>, it provides the C<try_run> method.
+Takes two arguments: first, the arguments to pass to the code, second the expected return value. Passes the arguments to the test subject, and tests the return value against the expected value. 
 
-=head1 METHODS
-
-=head3 try_run
-
-	pCr->try_run([42], 43)->ok(sub{return $_[0]+1;});
-
-Passes the contents of the first arrayref as arguments to the coderef, evaluating it in scalar context and comparing it to the second value (which will be upgraded). 
-
-=head1 OTHER INFORMATION
-
-For author, version, bug reports, support, etc, please see L<Test::Proto>. 
+The arguments and return value should be arrayrefs; the code is evaluated in list context.
 
 =cut
 
+sub call {
+	my ($self) = shift;
+	$self->call_list_context(@_);
+}
+
+=head3 call_void_context
+
+	$p->call_void_context(['test.txt','>'])->ok($subject);
+
+Takes one argument: the arguments to use with the method, as an arrayref. Calls the method on the test subject, with the arguments. This test will always pass, unless the code dies, or is not code.
+
+=cut
+
+sub call_void_context {
+	my ( $self, $args, $reason ) = @_;
+	$self->add_test( 'call_void_context', { args => $args, }, $reason );
+}
+
+define_test "call_void_context" => sub {
+	my ( $self, $data, $reason ) = @_;    # self is the runner
+	my $args = $data->{args};
+	$self->subject->(@$args);
+	return $self->pass;                   #~ void context so we pass unless it dies.
+};
+
+=head3 call_scalar_context
+
+	$p->call_scalar_context(['test.txt','>'], $true)->ok($subject);
+
+Takes two arguments: first, the arguments to pass to the code, second the expected return value. Passes the arguments to the test subject, and tests the return value against the expected value. 
+
+The arguments should be an arrayref, and the expected value should be a prototype evaluating the returned scalar, as the method is evaluated in scalar context.
+
+=cut
+
+sub call_scalar_context {
+	my ( $self, $args, $expected, $reason ) = @_;
+	$self->add_test(
+		'call_scalar_context',
+		{
+			args     => $args,
+			expected => $expected
+		},
+		$reason
+	);
+}
+
+define_test "call_scalar_context" => sub {
+	my ( $self, $data, $reason ) = @_;    # self is the runner
+	my $args     = $data->{args};
+	my $expected = upgrade( $data->{expected} );
+	my $response = $self->subject->(@$args);
+	return $expected->validate( $response, $self );
+};
+
+=head3 call_list_context
+
+	$p->call_list_context(['test.txt','>'], [$true])->ok($subject);
+
+Takes two arguments: first, the arguments to pass to the code, second the expected return value. Passes the arguments to the test subject, and tests the return value against the expected value. 
+
+The arguments and return value should be arrayrefs; the code is evaluated in list context.
+
+=cut
+
+sub call_list_context {
+	my ( $self, $args, $expected, $reason ) = @_;
+	$self->add_test(
+		'call_list_context',
+		{
+			args     => $args,
+			expected => $expected
+		},
+		$reason
+	);
+}
+
+define_test call_list_context => sub {
+	my ( $self, $data, $reason ) = @_;    # self is the runner
+	my $args     = $data->{args};
+	my $expected = upgrade( $data->{expected} );
+	my $response = [ $self->subject->(@$args) ];
+	return $expected->validate( $response, $self );
+};
+
+1;

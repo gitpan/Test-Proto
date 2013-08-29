@@ -1,92 +1,101 @@
 package Test::Proto::Compare;
-use 5.006;
 use strict;
 use warnings;
-use overload "&{}"=>\&_as_code;
+use Moo;
+use Test::Proto::Common;
+use overload
+	'&{}' => \&compare,
+	'""'  => sub { $_[0]->summary };
 
-sub new
-{
-	my ($class, $code) = @_;
-	$code = sub {$_[0] cmp $_[1];} unless defined $code;
-	bless {
-		'reverse'=>'0',
-		'code'=>$code,
-	}, $class;
-}
+has 'code',
+	is      => 'rw',
+	default => sub {
+	sub { $_[0] cmp $_[1] }
+	};
 
-sub compare
-{
-	my ($self, $A, $B) = @_;
-	if ($self->{'reverse'})
-	{
-		return &{$self->{'code'}}($B, $A)
-	}
-	else
-	{
-		return &{$self->{'code'}}($A, $B)
-	}
-}
+has 'reversed',
+	is      => 'rw',
+	default => sub { 0 };
 
-sub _as_code
-{
-	my ($self) = @_;
-	if ($self->{'reverse'})
-	{
-		return sub{my $A = shift; my $B = shift; &{$self->{'code'}}($B, $A)};
+has 'summary',
+	is      => 'rw',
+	default => sub { 'cmp' };
 
-	}
-	else
-	{
-		return $self->{'code'};
-	}
-}
+around 'code', 'reversed', 'summary', \&Test::Proto::Common::chainable;
 
-sub reverse
-{
-	my ($self) = @_;
-	$self->{'reverse'} = !$self->{'reverse'};
+sub reverse {
+	my $self = shift;
+	$self->reversed( !$self->reversed );
 	return $self;
 }
 
-1;
+sub compare {
+	my ( $self, $A, $B ) = @_;
+	if ( $self->reversed ) {
+		return $self->code->( $B, $A );
+	}
+	else {
+		return $self->code->( $A, $B );
+	}
+}
 
+sub eq { shift->compare(@_) == 0 }
+sub ne { shift->compare(@_) != 0 }
 
-=pod
+sub gt { shift->compare(@_) > 0 }
+sub ge { shift->compare(@_) >= 0 }
+
+sub lt { shift->compare(@_) < 0 }
+sub le { shift->compare(@_) <= 0 }
+
+sub BUILDARGS {
+	my $class = shift;
+	return { ( exists $_[0] ? ( code => $_[0] ) : () ) };
+}
 
 =head1 NAME
 
-Test::Proto::Compare - base class for comparisons.
+Test::Proto::Compare - wrapper for comparison functions
 
 =head1 SYNOPSIS
 
-	Test::Proto::Compare->new->compare('aaa', 'aab'); # -1
+	my $c = Test::Proto::Compare->new(sub {lc $_[0] cmp lc $_[1]});
+	$c->summary('lc cmp');
+	$c->compare($left, $right); # lc $left cmp $right
+	$c->reverse->compare($left, $right); # lc $right cmp lc $left
 
-This is a base class for comparison functions. 
+This class provides a wrapper for comparison functions so they can be identified by formatters.
 
 =head1 METHODS
 
 =head3 new
 
-	Test::Proto::Compare->new(sub{lc shift cmp lc shift;});
+If an argument is passed, it replaces the C<code> attribute.
 
-The new function takes an argument, the coderef which is used to do the comparison. It is optional, and defaults to C<cmp>. 
+=head3 code
+
+Chainable attribute containing the comparison code itself.
 
 =head3 compare
 
-	$c->compare($a,$b);
+Executes the comparison code, using reversed to determine whether to reverse the arguments.
 
-This method will compare two arguments and return the result. 
+=head3 summary
+
+Chainable attribute; a brief human-readable description of the operation which will be performed. Default is 'cmp'.
+
+=head3 reversed
+
+Chainable attribute. 1 if the comparison is reversed, 0 otherwise. Default is 0. Also a chainable setter.
 
 =head3 reverse
 
-	$c->reverse->compare($a,$b);
-	# i.e.   $c->compare($b,$a);
+A chainable method which takes no arguments, and causes C<reversed> to be either 1 or 0 (whichever it previously wasn't).
 
-Calling this method will reverse the order in which the arguments are fed to the comparison functions.
+=head3 eq, ne, gt, lt, ge, le
 
-=head1 OTHER INFORMATION
-
-For author, version, bug reports, support, etc, please see L<Test::Proto>. 
+These run compare and return a true or false value depending on what compare returned.
 
 =cut
 
+1;

@@ -5,18 +5,27 @@ use Test::More;
 BEGIN {
 	foreach (qw(
 		Test::Proto
-		Test::Proto::ArrayRef
+
 		Test::Proto::Base
+		Test::Proto::Role::Value
+
+		Test::Proto::Common
+		Test::Proto::TestCase
+		Test::Proto::TestRunner
+
+		Test::Proto::Formatter
+		Test::Proto::Formatter::TestBuilder
+
+		Test::Proto::HashRef
+		Test::Proto::Role::HashRef
+		Test::Proto::ArrayRef
+		Test::Proto::Role::ArrayRef
+
 		Test::Proto::CodeRef
+		Test::Proto::Object
+
 		Test::Proto::Compare
 		Test::Proto::Compare::Numeric
-		Test::Proto::Exception
-		Test::Proto::Fail
-		Test::Proto::HashRef
-		Test::Proto::Object
-		Test::Proto::Series
-		Test::Proto::String
-		Test::Proto::Test
 	))
 	{
     	use_ok( $_ ) || print "Bail out!\n";
