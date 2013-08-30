@@ -15,7 +15,7 @@ use overload
 	;
 with('Test::Proto::Role::Value');
 with('Test::Proto::Role::Tagged');
-our $VERSION = '0.020';
+our $VERSION = '0.021';
 
 =pod
 
@@ -232,12 +232,6 @@ sub run_tests {
 	$runner->done( "A " . ( ref $self ) . " must pass all its subtests." );
 	return $self;
 }
-
-=head3 add_test_method
-
-	add_test_method 'is_uppercase', sub { $_[1]->subject =~ !/[a-z]/ }
-
-=cut
 
 =head1 OTHER INFORMATION
 
