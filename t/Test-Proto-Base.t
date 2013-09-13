@@ -5,6 +5,8 @@ use warnings;
 use Test::More;
 use Test::Proto::Base;
 use Data::Dumper;
+use Scalar::Util;
+
 my $undef = undef;
 ok (1, 'ok is ok');
 
@@ -44,6 +46,8 @@ is_a_good_fail(p->defined->validate($undef), "undef is defined should fail");
 
 is_a_good_pass(p->undefined->validate(undef), "undef is undefined should pass");
 is_a_good_fail(p->undefined->validate(0), "0 is undefined should fail");
+
+is_a_good_pass(p->true->validate('a', 'because'), 'can pass context as string'); # we ought to validate passing context as a string actually behaves correctly
 
 is_a_good_pass(p->eq('a')->validate('a'), "'a' eq 'a' should pass");
 is_a_good_fail(p->eq('a')->validate('b'), "'b' eq 'a' should fail");
@@ -94,6 +98,16 @@ is_a_good_fail(p->is_a('ARRAY')->validate({}), "{} is_a ARRAY should fail");
 
 is_a_good_pass(p->ref('ARRAY')->validate([]), "[] ref ARRAY should pass");
 is_a_good_fail(p->ref('ARRAY')->validate({}), "{} ref ARRAY should fail");
+
+my $reference = [];
+
+is_a_good_pass(p->refaddr( Scalar::Util::refaddr $reference )->validate($reference), "refaddr works");
+is_a_good_fail(p->refaddr('wrong')->validate($reference), "refaddr fails correctly");
+is_a_good_pass(p->refaddr(p->undefined)->validate('string'), "refaddr passes correctly when testing refaddr string for undef");
+
+is_a_good_pass(p->refaddr_of( $reference )->validate($reference), "refaddr_of works");
+is_a_good_fail(p->refaddr_of([])->validate($reference), "refaddr_of fails correctly");
+is_a_good_pass(p->refaddr_of('b')->validate('a'), "refaddr_of always passes for strings");
 
 is_a_good_pass(p->like(qr/^a$/)->validate('a'), "'a' =~ /^a$/ should pass");
 is_a_good_fail(p->like(qr/^a$/)->validate('b'), "'a' =~ /^a$/ should fail");
