@@ -15,7 +15,7 @@ use overload
 	;
 with('Test::Proto::Role::Value');
 with('Test::Proto::Role::Tagged');
-our $VERSION = '0.022';
+our $VERSION = '0.023';
 
 =pod
 
@@ -104,7 +104,7 @@ This method returns a copy of the current object. The new object can have tests 
 sub clone {
 	my $self = shift;
 	my $pkg  = CORE::ref $self;
-	my %args = ( map { $_ => $self->$_ } qw(natural_script user_script tags) );
+	my %args = ( map { $_ => [ @{ $self->$_ } ] } qw(natural_script user_script tags) );
 	return $pkg->new(%args);
 }
 

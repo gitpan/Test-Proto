@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use warnings;
 use Test::Proto::Common;
-use Scalar::Util qw(blessed weaken isweak);
+use Scalar::Util qw(weaken isweak);
 use Moo::Role;
 
 =head1 NAME
@@ -263,12 +263,7 @@ sub ref {
 
 define_test 'ref' => sub {
 	my ( $self, $data, $reason ) = @_;    # self is the runner, NOT the prototype
-	if ( CORE::ref( $self->subject ) eq $data->{expected} ) {
-		return $self->pass;
-	}
-	else {
-		return $self->fail;
-	}
+	return upgrade( $data->{expected} )->validate( CORE::ref( $self->subject ), $self );
 };
 
 =head3 is_a
@@ -310,6 +305,96 @@ define_test is_a => sub {
 	return $self->fail;
 };
 
+=head3 blessed 
+
+	p->blessed->ok($object); # passes
+	p->blessed('Correct::Class')->ok($object); # passes
+	p->blessed->ok([]); # fails
+
+Compares the prototype to the result of running C<blessed> from L<Scalar::Util> on the test subject. 
+
+=cut
+
+sub blessed {
+	my ( $self, $expected, $reason ) = @_;
+	$expected = Test::Proto::Base->new()->ne('') unless defined $expected;
+	$self->add_test( 'blessed', { expected => $expected }, $reason );
+}
+
+define_test blessed => sub {
+	my ( $self, $data, $reason ) = @_;    # self is the runner, NOT the prototype
+	return upgrade( $data->{expected} )->validate( Scalar::Util::blessed( $self->subject ), $self );
+};
+
+=head3 array
+
+	p->array->ok([1..10]); # passes
+	p->array->ok($object); # fails, even if $object overloads @{}
+
+Passes if the subject is an unblessed array.
+
+=cut 
+
+sub array {
+	my $self = shift;
+	$self->ref( 'ARRAY', @_ );
+}
+
+=head3 hash
+
+	p->hash->ok({a=>'1'}); # passes
+	p->hash->ok($object); # fails, even if $object overloads @{}
+
+Passes if the subject is an unblessed hash.
+
+=cut 
+
+sub hash {
+	my $self = shift;
+	$self->ref( 'HASH', @_ );
+}
+
+=head3 scalar
+
+	p->scalar->ok('a'); # passes
+	p->scalar->ok(\''); # fails
+
+Passes if the subject is an unblessed scalar.
+
+=cut 
+
+sub scalar {
+	my $self = shift;
+	$self->ref( '', @_ );
+}
+
+=head3 scalar_ref
+
+	p->scalar_ref->ok(\'a'); # passes
+	p->scalar_ref->ok('a'); # fails
+
+Passes if the subject is an unblessed scalar ref.
+
+=cut 
+
+sub scalar_ref {
+	my $self = shift;
+	$self->ref( 'SCALAR', @_ );
+}
+
+=head3 object
+
+	p->scalar->ok('a'); # passes
+	p->scalar->ok(\'');
+
+Passes if the subject is a blessed object.
+
+=cut
+
+sub object {
+	shift->blessed;
+}
+
 =head3 refaddr
 
 	p->refaddr(undef)->ok('b');
@@ -326,7 +411,7 @@ sub refaddr {
 
 define_test 'refaddr' => sub {
 	my ( $self, $data, $reason ) = @_;    # self is the runner, NOT the prototype
-	upgrade($data->{expected})->validate( Scalar::Util::refaddr( $self->subject ), $self );
+	upgrade( $data->{expected} )->validate( Scalar::Util::refaddr( $self->subject ), $self );
 };
 
 =head3 refaddr_of
@@ -343,7 +428,7 @@ Note: This always passes for strings.
 
 sub refaddr_of {
 	my ( $self, $expected, $reason ) = @_;
-	my $refaddr = Scalar::Util::refaddr ($expected);
+	my $refaddr = Scalar::Util::refaddr($expected);
 	$refaddr = Test::Proto::Base->new->undefined unless defined $refaddr;
 	$self->add_test( 'refaddr', { expected => $refaddr }, $reason );
 }
