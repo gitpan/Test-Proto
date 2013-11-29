@@ -24,11 +24,11 @@ Test::Proto - OO test script golf sugar
 
 =head1 VERSION
 
-Version 0.025
+Version 0.026
 
 =cut
 
-our $VERSION = '0.025'; #~ must keep in sync with $Test::Proto::Base::VERSION;
+our $VERSION = '0.026';                                                                                     #~ must keep in sync with $Test::Proto::Base::VERSION;
 
 =head1 SYNOPSIS
 
@@ -89,7 +89,7 @@ Returns a prototype for an array/ArrayRef. See L<Test::Proto::ArrayRef>.
 
 sub pArray {
 	return Test::Proto::Common::upgrade( $_[0] ) if 1 == scalar @_;
-	return Test::Proto::ArrayRef->new(@_);
+	return Test::Proto::ArrayRef->new(@_)->array;
 }
 
 =head2 pHash
@@ -100,7 +100,7 @@ Returns a prototype for a hash/HashRef. See L<Test::Proto::HashRef>.
 
 sub pHash {
 	return Test::Proto::Common::upgrade( $_[0] ) if 1 == scalar @_;
-	return Test::Proto::HashRef->new(@_);
+	return Test::Proto::HashRef->new(@_)->hash;
 }
 
 =head2 pCode
@@ -124,7 +124,7 @@ Returns a prototype for an object. See L<Test::Proto::Object>.
 
 sub pObject {
 	if ( 1 == scalar @_ ) {
-		my $p = Test::Proto::Object->new();
+		my $p = Test::Proto::Object->new()->blessed;
 		if ( !ref $_[0] ) {
 			$p->is_a( $_[0] );
 		}
@@ -140,7 +140,7 @@ sub pObject {
 		return $p;
 	}
 	else {
-		return Test::Proto::Object->new(@_);
+		return Test::Proto::Object->new(@_)->blessed;
 	}
 }
 
