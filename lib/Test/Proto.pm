@@ -17,6 +17,7 @@ use Test::Proto::Common ();
 use Scalar::Util qw(blessed refaddr);
 use base "Exporter";
 our @EXPORT_OK = qw(&p &pArray &pHash &pCode &pObject &pSeries &pRepeatable &pAlternation &c &cNumeric);    # symbols to export on request
+our %EXPORT_TAGS = (all => [@EXPORT_OK]);
 
 =head1 NAME
 
@@ -24,17 +25,17 @@ Test::Proto - OO test script golf sugar
 
 =head1 VERSION
 
-Version 0.026
+Version 0.027
 
 =cut
 
-our $VERSION = '0.026';                                                                                     #~ must keep in sync with $Test::Proto::Base::VERSION;
+our $VERSION = '0.027';                                                                                     #~ must keep in sync with $Test::Proto::Base::VERSION;
 
 =head1 SYNOPSIS
 
 This module provides an expressive interface for validating deep structures and objects.
 
-	use Test::Proto qw(p pArray pHash pSeries);
+	use Test::Proto ':all';
 	
 	pArray	->contains_only(pSeries('', pHash), 
 			"ArrayRef must contain only an empty string followed by a hashref")

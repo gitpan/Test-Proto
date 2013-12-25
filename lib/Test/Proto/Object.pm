@@ -1,5 +1,5 @@
 package Test::Proto::Object;
-use 5.006;
+use 5.008;
 use strict;
 use warnings;
 use Moo;
@@ -12,6 +12,8 @@ use Test::Proto::Common;
 =head1 NAME
 
 Test::Proto::Object - Test an object's behaviour
+
+=head1 METHODS
 
 =head3 method
 
@@ -38,7 +40,7 @@ sub method {
 
 =head3 method_void_context
 
-	$p->method('open', ['test.txt','>'])->ok($subject);
+	$p->method_void_context('open', ['test.txt','>'])->ok($subject);
 
 Takes two arguments, a method, and the arguments to use with the method. Calls the method on the test subject, with the arguments. 
 
